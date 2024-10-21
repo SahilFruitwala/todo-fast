@@ -12,10 +12,8 @@ config = context.config
 
 # here we allow ourselves to pass interpolation vars to alembic.ini
 # fron the host env
-section = config.config_ini_section
-print(os.environ.get("DATABASE_URL"))
-config.set_section_option(section, "DATABASE_URL", os.environ.get("DATABASE_URL"))
-config.set_section_option(section, "AUTH_TOKEN", os.environ.get("AUTH_TOKEN"))
+from src.db import dbUrl
+config.set_main_option('sqlalchemy.url', dbUrl)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -26,7 +24,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+from src.models import Base
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

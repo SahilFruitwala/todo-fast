@@ -13,3 +13,4 @@ class Task(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed: Mapped[bool] =  mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] =  mapped_column(Boolean, default=True)
