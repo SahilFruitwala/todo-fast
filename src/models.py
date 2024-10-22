@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import String, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .db import Base
+from src.db import Base
 
 class Task(Base):
     __tablename__ = "task"

@@ -1,8 +1,9 @@
-import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from src.db import dbUrl
+from src.models import Base
 
 from alembic import context
 
@@ -12,7 +13,6 @@ config = context.config
 
 # here we allow ourselves to pass interpolation vars to alembic.ini
 # fron the host env
-from src.db import dbUrl
 config.set_main_option('sqlalchemy.url', dbUrl)
 
 # Interpret the config file for Python logging.
@@ -24,7 +24,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from src.models import Base
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

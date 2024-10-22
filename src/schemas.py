@@ -1,0 +1,39 @@
+from typing import List, Optional
+from datetime import datetime
+from pydantic import BaseModel
+
+class TaskBase(BaseModel):
+    todo: str
+    description: str
+
+
+class TaskCreate(TaskBase):
+    pass
+
+
+class TaskUpdate(BaseModel):
+    todo: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
+
+class TaskComplete(BaseModel):
+    ids: List[int] = []
+    completed: Optional[bool] = None
+
+
+class TaskDelete(BaseModel):
+    ids: List[int] = []
+
+
+class TaskResponse(TaskBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    completed: bool
+
+    class Config:
+        from_attributes = True
+        
+        json_encoders = {
+            datetime: lambda v: v.strftime('%Y-%m-%d %H-%M-%S')
+        }
