@@ -7,11 +7,11 @@ from src.crud import (
     get_tasks,
     create_task,
     update_task,
-    delete_task,
-    set_complete_task,
-    set_delete_task,
+    complete_tasks,
+    delete_tasks,
+    restore_tasks,
 )
-from src.schemas import TaskResponse, TaskCreate, TaskUpdate, TaskComplete, TaskDelete
+from src.schemas import TaskResponse, TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore
 
 router = APIRouter(prefix="/tasks", tags=['tasks'])
 
@@ -35,17 +35,13 @@ async def write_task(task: TaskCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/complete", response_model=List[TaskResponse])
-async def set_complete_multiple_task(
-    tasks: TaskComplete, db: Session = Depends(get_db)
-):
-    return set_complete_task(db, tasks)
+async def set_complete_multiple_task(tasks: TaskComplete, db: Session = Depends(get_db)):
+    return complete_tasks(db, tasks)
 
 
-@router.patch("/delete", response_model=List[TaskResponse])
-async def set_delete_multiple_task(
-    tasks: TaskDelete, db: Session = Depends(get_db)
-):
-    return set_delete_task(db, tasks)
+@router.patch("/restore")
+async def restore_multiple_task(tasks: TaskDeleteRestore, db: Session = Depends(get_db)):
+    return restore_tasks(db, tasks)
 
 
 @router.patch("/{task_id}", response_model=TaskResponse)
@@ -53,6 +49,10 @@ async def modify_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_
     return update_task(db, task_id, task)
 
 
-@router.delete("/{task_id}")
-async def remove_task(task_id: int, db: Session = Depends(get_db)):
-    return delete_task(db, task_id)
+@router.post("/delete")
+async def remove_task(tasks: TaskDeleteRestore, db: Session = Depends(get_db)):
+    return delete_tasks(db, tasks)
+
+@router.post("/permanentDelete")
+async def remove_permanent_task(tasks: TaskDeleteRestore, db: Session = Depends(get_db)):
+    return delete_tasks(db, tasks, permanent=True)

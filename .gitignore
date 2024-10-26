@@ -10,3 +10,6 @@ wheels/
 .venv
 *.db
 .env
+
+.coverage
+coverage_re/

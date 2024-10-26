@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class TaskBase(BaseModel):
     todo: str
@@ -21,7 +21,7 @@ class TaskComplete(BaseModel):
     completed: Optional[bool] = None
 
 
-class TaskDelete(BaseModel):
+class TaskDeleteRestore(BaseModel):
     ids: List[int] = []
 
 
@@ -31,9 +31,9 @@ class TaskResponse(TaskBase):
     updated_at: datetime
     completed: bool
 
-    class Config:
-        from_attributes = True
-        
-        json_encoders = {
+    model_config = ConfigDict(
+        json_encoders={
             datetime: lambda v: v.strftime('%Y-%m-%d %H-%M-%S')
-        }
+        },
+        from_attributes=True,
+    )

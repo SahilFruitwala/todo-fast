@@ -6,12 +6,19 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.13.3",
-    "fastapi[standard]>=0.115.2",
-    "sqlalchemy-libsql>=0.1.0",
+    "fastapi[standard]>=0.115.3",
     "sqlalchemy>=2.0.36",
 ]
 
 [tool.uv]
 dev-dependencies = [
+    "freezegun>=1.5.1",
+    "pytest-cov>=5.0.0",
+    "pytest>=8.3.3",
     "ruff>=0.7.0",
+]
+
+[tool.coverage.run]
+omit = [
+    "src/db.py",
 ]

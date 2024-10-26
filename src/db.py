@@ -3,14 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
-dbUrl = 'sqlite:///dev.db'
-if os.environ.get("ENV_SETTING") != 'dev':
-    TURSO_DATABASE_URL = os.environ.get("DATABASE_URL")
-    TURSO_AUTH_TOKEN = os.environ.get("AUTH_TOKEN")
+DATABASE_URL = os.environ.get("DB_URL")
 
-    dbUrl = f"sqlite+{TURSO_DATABASE_URL}/?authToken={TURSO_AUTH_TOKEN}&secure=true"
-
-engine = create_engine(dbUrl, connect_args={'check_same_thread': False})
+engine = create_engine(DATABASE_URL, connect_args={'check_same_thread': False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Base(DeclarativeBase):
