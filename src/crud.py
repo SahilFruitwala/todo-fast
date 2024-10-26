@@ -1,9 +1,10 @@
-from typing import List
+from typing import Type, List
+
+from src.utils import utc_time
 from sqlalchemy.orm import Session
 from src.models import Task
-from src.schemas import TaskCreate, TaskUpdate, TaskComplete, TaskDelete
+from src.schemas import TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore
 from fastapi import HTTPException
-from datetime import datetime
 
 def get_task(db: Session, task_id: int):
     return db.query(Task).filter(Task.id == task_id).first()
@@ -29,40 +30,39 @@ def update_task(db: Session, task_id: int, task: TaskUpdate):
     for key, value in task_data.items():
         setattr(db_task, key, value)
 
-    db_task.updated_at = datetime.utcnow()
+    db_task.updated_at = utc_time()
     db.commit()
     db.refresh(db_task)
 
     return db_task
 
 
-def set_delete_task(db: Session, tasks: TaskDelete):
+def delete_tasks(db: Session, tasks: TaskDeleteRestore, permanent=False):
+    if not permanent:
+        db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
+            {Task.deleted: True},
+            synchronize_session=False,
+        )
+    else:
+        db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
+            {Task.is_active: False},
+            synchronize_session=False,
+        )
+    db.commit()
+
+
+def restore_tasks(db: Session, tasks: TaskDeleteRestore):
     db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
-        {Task.is_active: False},
+        {Task.deleted: False},
         synchronize_session=False,
     )
     db.commit()
-    return db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).all()
 
 
-def set_complete_task(db: Session, tasks: TaskComplete):
+def complete_tasks(db: Session, tasks: TaskComplete):
     db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
         {Task.completed: tasks.completed},
         synchronize_session=False,
     )
     db.commit()
     return db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).all()
-
-
-def delete_task(db: Session, task_id: int):
-    db_task = db.query(Task).filter(Task.id == task_id).first()
-    if db_task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    if db_task.is_active:  # send to trash
-        db_task.updated_at = datetime.utcnow()
-        db_task.is_active = False
-    else:  # permanently delete
-        db.delete(db_task)
-    
-    db.commit()
