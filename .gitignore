@@ -15,3 +15,4 @@ wheels/
 coverage_re/
 .idea
 .ruff_cache
+.DS_Store
