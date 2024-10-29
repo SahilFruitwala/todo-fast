@@ -1,12 +1,36 @@
 from typing import Type, List
 
+import itertools as it
 from src.utils import utc_time
 from sqlalchemy.orm import Session
 from src.models import Task
-from src.schemas import TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore
+from src.schemas import TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore, TaskResponse
 from fastapi import HTTPException
 
-def get_task(db: Session, task_id: int):
+from typing import Annotated
+from src.db import get_db
+from fastapi import Depends
+
+db_dep = Annotated[Session, Depends(get_db)]
+
+
+# Dependency to check if multiple tasks exist
+async def validated_tasks(db: Session, task_ids: List[int]) -> List[Task]:
+    incoming_ids = set(task_ids)
+    tasks = db.query(Task).filter(Task.id.in_(incoming_ids)).all()
+    existing_ids = set(task.id for task in tasks)
+    if error_ids := incoming_ids - existing_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with ids '{', '.join(str(_id) for _id in error_ids)}' not found",
+        )
+    return tasks
+
+
+def get_validated_task(db: Session, task_id: int) -> Task:
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task with id '{task_id}' not found")
     return db.query(Task).filter(Task.id == task_id).first()
 
 def get_tasks(db: Session, skip: int = 0, limit: int = 10):
@@ -14,7 +38,7 @@ def get_tasks(db: Session, skip: int = 0, limit: int = 10):
 
 
 def create_task(db: Session, task: TaskCreate):
-    task_data = task.dict(exclude_unset=True)
+    task_data = task.model_dump(exclude_none=True)
     db_task = Task(**task_data)
     db.add(db_task)
     db.commit()
@@ -23,10 +47,8 @@ def create_task(db: Session, task: TaskCreate):
 
 
 def update_task(db: Session, task_id: int, task: TaskUpdate):
-    task_data = task.dict(exclude_unset=True)
-    db_task = db.query(Task).filter(Task.id == task_id).first()
-    if db_task is None:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task_data = task.model_dump(exclude_none=True)
+    db_task = get_validated_task(db, task_id)
     for key, value in task_data.items():
         setattr(db_task, key, value)
 

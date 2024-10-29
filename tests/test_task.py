@@ -41,7 +41,7 @@ def test_get_specific_task(client, db_session):
     response = client.get("/tasks/111")
     result = response.json()
     assert response.status_code == 404
-    assert result['detail'] == 'Task not found'
+    assert result['detail'] == "Task with id '111' not found"
 
 def test_create_task(client, db_session):
     assert db_session.query(Task).count() == 2
@@ -68,7 +68,7 @@ def test_update_task(client, db_session):
     result = response.json()
 
     assert response.status_code == 404
-    assert result['detail'] == 'Task not found'
+    assert result['detail'] == "Task with id '111' not found"
 
 def test_completed_task(client, db_session):
     complete_tasks = {"ids": [1, 2], "completed": True}
@@ -77,6 +77,12 @@ def test_completed_task(client, db_session):
 
     assert db_session.query(Task).filter(Task.id == 1).first().completed
     assert db_session.query(Task).filter(Task.id == 2).first().completed
+
+    complete_tasks = {"ids": [1, 111], "completed": True}
+    response = client.patch("/tasks/complete/", json=complete_tasks)
+    assert response.status_code == 404
+
+    assert response.json()['detail'] == "Task with ids '111' not found"
 
 def test_delete_tasks(client, db_session):
     delete_tasks = {"ids": [1, 2]}
