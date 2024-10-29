@@ -9,7 +9,7 @@ from src.db import Base
 
 
 class Task(Base):
-    __tablename__ = "task"
+    __tablename__ = 'task'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     todo: Mapped[str] = mapped_column(String(120))
@@ -20,12 +20,12 @@ class Task(Base):
     deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    user: Mapped["User"] = relationship(back_populates="tasks")
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    user: Mapped['User'] = relationship(back_populates='tasks')
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(120), nullable=True)
@@ -35,6 +35,6 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_time)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    tasks: Mapped[List["Task"]] = relationship(
-        back_populates="user", cascade="all, delete"
+    tasks: Mapped[List['Task']] = relationship(
+        back_populates='user', cascade='all, delete'
     )

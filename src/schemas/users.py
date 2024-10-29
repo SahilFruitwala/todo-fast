@@ -25,6 +25,6 @@ class UserResponse(UserBase):
     updated_at: datetime
 
     model_config = ConfigDict(
-        json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H-%M-%S")},
+        json_encoders={datetime: lambda v: v.strftime('%Y-%m-%d %H-%M-%S')},
         from_attributes=True,
     )

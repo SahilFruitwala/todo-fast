@@ -12,6 +12,6 @@ app.include_router(task_router)
 app.include_router(user_router)
 
 
-@app.get("/")
+@app.get('/')
 def read_root():
-    return "Congratulation! Server still works!"
+    return 'Congratulation! Server still works!'
