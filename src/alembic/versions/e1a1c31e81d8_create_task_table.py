@@ -5,12 +5,12 @@ Revises:
 Create Date: 2024-10-21 16:59:57.776152
 
 """
+
 from typing import Sequence, Union
 
 
-
 # revision identifiers, used by Alembic.
-revision: str = 'e1a1c31e81d8'
+revision: str = "e1a1c31e81d8"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

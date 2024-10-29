@@ -1,10 +1,12 @@
 from typing import Type, List
 
 import itertools as it
+
+from src.crud.user import validated_user
 from src.utils import utc_time
 from sqlalchemy.orm import Session
 from src.models import Task
-from src.schemas import TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore, TaskResponse
+from src.schemas.tasks import TaskCreate, TaskUpdate, TaskComplete, TaskDeleteRestore
 from fastapi import HTTPException
 
 from typing import Annotated
@@ -27,17 +29,21 @@ async def validated_tasks(db: Session, task_ids: List[int]) -> List[Task]:
     return tasks
 
 
-def get_validated_task(db: Session, task_id: int) -> Task:
+def validated_task(db: Session, task_id: int) -> Task:
     task = db.query(Task).filter(Task.id == task_id).first()
     if task is None:
-        raise HTTPException(status_code=404, detail=f"Task with id '{task_id}' not found")
-    return db.query(Task).filter(Task.id == task_id).first()
+        raise HTTPException(
+            status_code=404, detail=f"Task with id '{task_id}' not found"
+        )
+    return task
+
 
 def get_tasks(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(Task).filter(Task.is_active == True).offset(skip).limit(limit).all()  # noqa: E712
+    return db.query(Task).filter(Task.is_active == True).offset(skip).limit(limit).all()
 
 
 def create_task(db: Session, task: TaskCreate):
+    validated_user(db, user_id=task.user_id)
     task_data = task.model_dump(exclude_none=True)
     db_task = Task(**task_data)
     db.add(db_task)
@@ -48,7 +54,7 @@ def create_task(db: Session, task: TaskCreate):
 
 def update_task(db: Session, task_id: int, task: TaskUpdate):
     task_data = task.model_dump(exclude_none=True)
-    db_task = get_validated_task(db, task_id)
+    db_task = validated_task(db, task_id)
     for key, value in task_data.items():
         setattr(db_task, key, value)
 
@@ -62,12 +68,12 @@ def update_task(db: Session, task_id: int, task: TaskUpdate):
 def delete_tasks(db: Session, tasks: TaskDeleteRestore, permanent=False):
     if not permanent:
         db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
-            {Task.deleted: True},
+            {Task.deleted: True, Task.updated_at: utc_time()},
             synchronize_session=False,
         )
     else:
         db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
-            {Task.is_active: False},
+            {Task.is_active: False, Task.updated_at: utc_time()},
             synchronize_session=False,
         )
     db.commit()
@@ -75,7 +81,7 @@ def delete_tasks(db: Session, tasks: TaskDeleteRestore, permanent=False):
 
 def restore_tasks(db: Session, tasks: TaskDeleteRestore):
     db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
-        {Task.deleted: False},
+        {Task.deleted: False, Task.updated_at: utc_time()},
         synchronize_session=False,
     )
     db.commit()
@@ -83,7 +89,7 @@ def restore_tasks(db: Session, tasks: TaskDeleteRestore):
 
 def complete_tasks(db: Session, tasks: TaskComplete):
     db.query(Task).filter(Task.id.in_(tasks.ids), Task.is_active == True).update(
-        {Task.completed: tasks.completed},
+        {Task.completed: tasks.completed, Task.updated_at: utc_time()},
         synchronize_session=False,
     )
     db.commit()
