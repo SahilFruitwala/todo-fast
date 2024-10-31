@@ -6,7 +6,8 @@
   Features might be:
    - Tasks Operations (CRUD - multiple RD, and task complete)
    - User Operations (CRUD, and auth)
-   May be:
+
+   **May be:**
    - Multiple user / team projects
    - Email Notification
    - UI in FASTAPI
