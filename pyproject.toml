@@ -17,6 +17,7 @@ dev-dependencies = [
     "pre-commit>=4.0.1",
     "pytest-cov>=5.0.0",
     "pytest>=8.3.3",
+    "ruff>=0.7.1",
 ]
 
 [tool.coverage.run]
@@ -29,3 +30,6 @@ force-exclude = [
     "src/alembic/",
     "alembic.ini"
 ]
+
+[tool.ruff]
+lint.ignore = ["E712"]

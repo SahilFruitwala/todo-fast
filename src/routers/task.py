@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_201_CREATED
+
 from src.db import get_db
 from src.crud.task import (
     get_tasks,
@@ -10,62 +12,57 @@ from src.crud.task import (
     complete_tasks,
     delete_tasks,
     restore_tasks,
-    validated_tasks,
     validated_task,
 )
 from src.schemas.tasks import (
     TaskResponse,
     TaskCreate,
     TaskUpdate,
-    TaskComplete,
-    TaskDeleteRestore,
 )
 
-router = APIRouter(prefix='/tasks', tags=['tasks'])
+router = APIRouter(prefix='/users', tags=['tasks'])
 
 
-@router.get('/', response_model=List[TaskResponse])
-async def read_tasks(db: Session = Depends(get_db)):
-    return get_tasks(db)
+@router.get('/{user_id}/tasks', response_model=List[TaskResponse])
+async def read_tasks(user_id: int, db: Session = Depends(get_db)):
+    return get_tasks(db, user_id)
+
+@router.get('/{user_id}/tasks/{task_id}', response_model=TaskResponse)
+async def read_specific_task(user_id: int, task_id: int, db: Session = Depends(get_db)):
+    return validated_task(db, user_id, task_id)
+
+@router.post('/{user_id}/tasks/', response_model=TaskResponse, status_code=HTTP_201_CREATED)
+async def add_task(user_id: int, task: TaskCreate, db: Session = Depends(get_db)):
+    return create_task(db, user_id, task)
 
 
-@router.get('/{task_id}', response_model=TaskResponse)
-async def read_specific_task(task_id: int, db: Session = Depends(get_db)):
-    return validated_task(db, task_id)
+@router.post('/{user_id}/tasks/delete', status_code=HTTP_204_NO_CONTENT)
+async def remove_task(user_id: int, task_ids: List[int], db: Session = Depends(get_db)):
+    delete_tasks(db, user_id, task_ids)
+    return {'message': 'Task deleted successfully'}
 
+@router.post('/{user_id}/tasks/permanentDelete', status_code=HTTP_204_NO_CONTENT)
+async def permanent_remove_task(user_id: int, task_ids: List[int], db: Session = Depends(get_db)):
+    delete_tasks(db, user_id, task_ids, permanent=True)
+    return {'message': 'Task deleted successfully'}
 
-@router.post('/', response_model=TaskResponse)
-async def write_task(task: TaskCreate, db: Session = Depends(get_db)):
-    return create_task(db, task)
+@router.patch('/{user_id}/tasks/complete', response_model=List[TaskResponse])
+async def set_complete_task(user_id: int, task_ids: List[int], db: Session = Depends(get_db)):
+    return complete_tasks(db, user_id, task_ids)
 
+@router.patch('/{user_id}/tasks/uncomplete', response_model=List[TaskResponse])
+async def set_uncomplete_task(user_id: int, task_ids: List[int], db: Session = Depends(get_db)):
+    return complete_tasks(db, user_id, task_ids, completed=False)
 
-@router.patch('/complete')
-async def set_complete_multiple_task(
-    tasks: TaskComplete, db: Session = Depends(get_db)
+@router.patch('/{user_id}/tasks/restore')
+async def undelete_task(user_id: int, task_ids: List[int], db: Session = Depends(get_db)):
+    return restore_tasks(db, user_id, task_ids)
+
+@router.patch('/{user_id}/tasks/{task_id}', response_model=TaskResponse)
+async def modify_task(
+        user_id: int,
+        task_id: int,
+        task: TaskUpdate,
+        db: Session = Depends(get_db)
 ):
-    await validated_tasks(db, tasks.ids)
-    return complete_tasks(db, tasks)
-
-
-@router.patch('/restore')
-async def restore_multiple_task(
-    tasks: TaskDeleteRestore, db: Session = Depends(get_db)
-):
-    return restore_tasks(db, tasks)
-
-
-@router.patch('/{task_id}', response_model=TaskResponse)
-async def modify_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
-    return update_task(db, task_id, task)
-
-
-@router.post('/delete')
-async def remove_task(tasks: TaskDeleteRestore, db: Session = Depends(get_db)):
-    return delete_tasks(db, tasks)
-
-
-@router.post('/permanentDelete')
-async def remove_permanent_task(
-    tasks: TaskDeleteRestore, db: Session = Depends(get_db)
-):
-    return delete_tasks(db, tasks, permanent=True)
+    return update_task(db, user_id, task_id, task)
