@@ -24,22 +24,6 @@ def add_tasks(db_session):
     db_session.commit()
 
 
-def test_get_users(client):
-    response = client.get('/users')
-    result = response.json()
-
-    assert response.status_code == 200
-    assert len(result) == 2
-
-    assert result[0]['first_name'] is None
-    assert result[0]['last_name'] is None
-    assert result[0]['email'] == 'user-1@email.com'
-
-    assert result[1]['first_name'] == 'john'
-    assert result[1]['last_name'] == 'doe'
-    assert result[1]['email'] == 'user-2@email.com'
-
-
 def test_get_specific_user(client, db_session):
     response = client.get('/users/1')
     result = response.json()

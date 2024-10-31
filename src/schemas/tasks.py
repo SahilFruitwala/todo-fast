@@ -9,7 +9,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    user_id: int
+    pass
 
 
 class TaskUpdate(BaseModel):

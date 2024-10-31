@@ -22,7 +22,7 @@ def add_tasks(db_session):
 
 
 def test_get_tasks(client):
-    response = client.get('/tasks')
+    response = client.get('/users/1/tasks')
     result = response.json()
 
     assert response.status_code == 200
@@ -36,7 +36,7 @@ def test_get_tasks(client):
 
 
 def test_get_specific_task(client, db_session):
-    response = client.get('/tasks/1')
+    response = client.get('/users/1/tasks/1')
     result = response.json()
 
     assert response.status_code == 200
@@ -44,7 +44,7 @@ def test_get_specific_task(client, db_session):
     assert result['todo'] == 'First Todo'
     assert result['description'] == "First Todo's Description"
 
-    response = client.get('/tasks/111')
+    response = client.get('/users/1/tasks/111')
     result = response.json()
     assert response.status_code == 404
     assert result['detail'] == "Task with id '111' not found"
@@ -53,9 +53,9 @@ def test_get_specific_task(client, db_session):
 def test_create_task(client, db_session):
     assert db_session.query(Task).count() == 2
 
-    new_task = {'todo': 'New Task', 'description': 'New Task Description', 'user_id': 1}
-    response = client.post('/tasks', json=new_task)
-    assert response.status_code == 200
+    new_task = {'todo': 'New Task', 'description': 'New Task Description'}
+    response = client.post('/users/1/tasks/', json=new_task)
+    assert response.status_code == 201
 
     result = response.json()
     assert result['todo'] == new_task['todo']
@@ -66,13 +66,13 @@ def test_create_task(client, db_session):
 
 def test_update_task(client, db_session):
     update_task = {'todo': 'Updated Task'}
-    response = client.patch('/tasks/1', json=update_task)
+    response = client.patch('/users/1/tasks/1', json=update_task)
     assert response.status_code == 200
 
     result = response.json()
     assert result['todo'] == update_task['todo']
 
-    response = client.patch('/tasks/111', json=update_task)
+    response = client.patch('/users/1/tasks/111', json=update_task)
     result = response.json()
 
     assert response.status_code == 404
@@ -80,33 +80,40 @@ def test_update_task(client, db_session):
 
 
 def test_completed_task(client, db_session):
-    complete_tasks = {'ids': [1, 2], 'completed': True}
-    response = client.patch('/tasks/complete/', json=complete_tasks)
+    response = client.patch('/users/1/tasks/complete/', json=[1, 2])
     assert response.status_code == 200
 
     assert db_session.query(Task).filter(Task.id == 1).first().completed
     assert db_session.query(Task).filter(Task.id == 2).first().completed
 
-    complete_tasks = {'ids': [1, 111], 'completed': True}
-    response = client.patch('/tasks/complete/', json=complete_tasks)
+    response = client.patch('/users/1/tasks/complete/', json=[1, 111])
     assert response.status_code == 404
 
     assert response.json()['detail'] == "Task with ids '111' not found"
 
 
-def test_delete_tasks(client, db_session):
-    delete_tasks = {'ids': [1, 2]}
-    response = client.post('/tasks/delete', json=delete_tasks)
+def test_uncompleted_task(client, db_session):
+    task = db_session.query(Task).filter(Task.id == 1).first()
+    task.completed = True
+    db_session.commit()
+
+    response = client.patch('/users/1/tasks/uncomplete/', json=[1])
     assert response.status_code == 200
+
+    assert not db_session.query(Task).filter(Task.id == 1).first().completed
+
+
+def test_delete_tasks(client, db_session):
+    response = client.post('/users/1/tasks/delete', json=[1, 2])
+    assert response.status_code == 204
 
     assert db_session.query(Task).filter(Task.id == 1).first().deleted
     assert db_session.query(Task).filter(Task.id == 2).first().deleted
 
 
 def test_permanent_delete_multiple_task(client, db_session):
-    delete_tasks = {'ids': [1, 2]}
-    response = client.post('/tasks/permanentDelete', json=delete_tasks)
-    assert response.status_code == 200
+    response = client.post('/users/1/tasks/permanentDelete', json=[1, 2])
+    assert response.status_code == 204
 
     assert not db_session.query(Task).filter(Task.id == 1).first().is_active
     assert not db_session.query(Task).filter(Task.id == 2).first().is_active
@@ -117,8 +124,7 @@ def test_restore_multiple_task(client, db_session):
     task.deleted = True
     db_session.commit()
 
-    restore_tasks = {'ids': [1]}
-    response = client.patch('/tasks/restore/', json=restore_tasks)
+    response = client.patch('/users/1/tasks/restore/', json=[1])
     assert response.status_code == 200
 
     assert not db_session.query(Task).filter(Task.id == 1).first().deleted

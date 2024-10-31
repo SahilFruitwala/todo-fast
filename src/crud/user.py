@@ -1,4 +1,3 @@
-from typing import List
 
 from src.schemas.users import UserCreate, UserUpdate
 from src.utils import utc_time
@@ -14,10 +13,6 @@ def validated_user(db: Session, user_id: int) -> User:
             status_code=404, detail=f"User with id '{user_id}' not found"
         )
     return user
-
-
-def get_users(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(User).filter(User.is_active == True).offset(skip).limit(limit).all()
 
 
 def create_user(db: Session, user: UserCreate) -> User:
