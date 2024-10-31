@@ -6,7 +6,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-toml
     -   id: double-quote-string-fixer
-        exclude: '(alembic\.ini|^alembic/.*$)'
+        exclude: '(alembic\.ini|^alembic/.*$|README\.md)'
 -   repo: https://github.com/psf/black
     rev: 24.10.0
     hooks:
