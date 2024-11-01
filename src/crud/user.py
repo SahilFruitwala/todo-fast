@@ -1,6 +1,6 @@
 
 from src.schemas.users import UserCreate, UserUpdate
-from src.utils import utc_time
+from src.utils import utc_time, get_hashed_password, check_password
 from sqlalchemy.orm import Session
 from src.models import User
 from fastapi import HTTPException
@@ -17,6 +17,7 @@ def validated_user(db: Session, user_id: int) -> User:
 
 def create_user(db: Session, user: UserCreate) -> User:
     user_data = user.model_dump(exclude_none=True)
+    user_data['password'] = get_hashed_password(user_data['password'])
     db_user = User(**user_data)
     db.add(db_user)
     db.commit()
