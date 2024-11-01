@@ -2,10 +2,23 @@ from datetime import datetime
 from typing import List
 
 from src.utils import utc_time
-from sqlalchemy import String, DateTime, Boolean, ForeignKey
+from sqlalchemy import String, DateTime, Boolean, ForeignKey, TypeDecorator, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db import Base
+
+# class HexByteString(TypeDecorator):
+#     """Convert Python bytestring to string with hexadecimal digits and back for storage."""
+#
+#     impl = String
+#
+#     def process_bind_param(self, value, dialect):
+#         if not isinstance(value, bytes):
+#             raise TypeError("HexByteString columns support only bytes values.")
+#         return value.hex()
+#
+#     def process_result_value(self, value, dialect):
+#         return bytes.fromhex(value) if value else None
 
 
 class Task(Base):
@@ -31,6 +44,7 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(120), nullable=True)
     last_name: Mapped[str] = mapped_column(String(120), nullable=True)
     email: Mapped[str] = mapped_column(String(120), unique=True)
+    password: Mapped[str] = mapped_column(LargeBinary)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_time)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_time)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

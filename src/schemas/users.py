@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 class UserBase(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    password: str
     email: str
 
 
