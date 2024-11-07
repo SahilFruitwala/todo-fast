@@ -1,4 +1,3 @@
-
 from src.schemas.users import UserCreate, UserUpdate
 from src.utils import utc_time, get_hashed_password, check_password
 from sqlalchemy.orm import Session
@@ -18,6 +17,7 @@ def validated_user(db: Session, user_id: int) -> User:
 def create_user(db: Session, user: UserCreate) -> User:
     user_data = user.model_dump(exclude_none=True)
     user_data['password'] = get_hashed_password(user_data['password'])
+    del user_data['confirm_password']
     db_user = User(**user_data)
     db.add(db_user)
     db.commit()
@@ -28,6 +28,11 @@ def create_user(db: Session, user: UserCreate) -> User:
 def update_user(db: Session, user_id: int, user: UserUpdate) -> User:
     user_data = user.model_dump(exclude_none=True)
     db_user = validated_user(db, user_id)
+
+    if check_password(user_data['password'], db_user.password):
+        user_data['password'] = get_hashed_password(user_data['new_password'])
+        del user_data['new_password']
+
     for key, value in user_data.items():
         setattr(db_user, key, value)
 

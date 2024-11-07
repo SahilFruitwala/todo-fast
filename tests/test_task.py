@@ -1,5 +1,7 @@
 import pytest
 from src.models import Task, User
+from src.utils import get_hashed_password
+from tests.test_utils import create_test_user, create_test_task
 
 
 @pytest.fixture(autouse=True)
@@ -9,16 +11,9 @@ def add_tasks(db_session):
     db_session.query(Task).delete()
     db_session.commit()
 
-    user = User(email='testemail@email.com')
-    db_session.add(user)
-
-    task1 = Task(todo='First Todo', description="First Todo's Description", user=user)
-    db_session.add(task1)
-
-    task2 = Task(todo='Second Todo', description="Second Todo's Description", user=user)
-    db_session.add(task2)
-
-    db_session.commit()
+    user = create_test_user(db_session)
+    create_test_task(db_session, user)
+    create_test_task(db_session, user, todo='Second Todo', description="Second Todo's Description")
 
 
 def test_get_tasks(client):

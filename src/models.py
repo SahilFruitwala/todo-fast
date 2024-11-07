@@ -44,7 +44,7 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(120), nullable=True)
     last_name: Mapped[str] = mapped_column(String(120), nullable=True)
     email: Mapped[str] = mapped_column(String(120), unique=True)
-    password: Mapped[str] = mapped_column(LargeBinary)
+    password: Mapped[str] = mapped_column(LargeBinary, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_time)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_time)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
